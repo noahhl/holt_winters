@@ -47,6 +47,7 @@ module HoltWinters
       st = Array.new(y.length, 0.0)
       bt = Array.new(y.length, 0.0)
       it = Array.new(y.length, 0.0)
+      deviations = Array.new(y.length + m, 0.0)
       ft = Array.new(y.length + m, 0.0)
 
       st[1] = a0
@@ -78,10 +79,16 @@ module HoltWinters
         # Calculate forecast
         if (i + m) >= period
           ft[i + m] = (st[i] + (m * bt[i])) * it[i - period + m]
+          deviations[i + m] = deviation(gamma, st[i], ft[i + m], deviations[i-1])
         end
       end
 
-      ft
+      [ft, deviations]
+    end
+
+    def deviation(gamma,actual,prediction,last_seasonal_dev)
+      prediction ||= 0
+      gamma * (actual - prediction).abs + (1 - gamma) * last_seasonal_dev
     end
 
     # See: http://robjhyndman.com/researchtips/hw-initialization/
